@@ -1,18 +1,27 @@
-﻿using Dapper;
+﻿using System.Data;
+using Dapper;
 using Microsoft.Data.Sqlite;
 
 namespace schoffen.CodingTracker.Database;
 
-public class Database
+public class DatabaseContext
 {
-    public Database()
+    private readonly string? _connectionString = DatabaseConfiguration.GetConnectionString();
+    
+    public DatabaseContext()
     {
-        Initialize();   
+        Initialize();
+    }
+
+    public IDbConnection CreateConnection()
+    {
+        return new SqliteConnection(_connectionString);
     }
     
-    private static void Initialize()
+    private void Initialize()
     {
-        using var connection = new SqliteConnection(DatabaseConfiguration.GetConnectionString());
+        using var connection = CreateConnection();
+        connection.Open();
 
         const string codingSessionsTableQueue = """
                                                  CREATE TABLE IF NOT EXISTS CodingSessions (

@@ -4,6 +4,6 @@ internal abstract class Program
 {
     public static void Main()
     {
-        Console.Write("Hello World");
+        var db = new Database.DatabaseContext();
     }
 }
