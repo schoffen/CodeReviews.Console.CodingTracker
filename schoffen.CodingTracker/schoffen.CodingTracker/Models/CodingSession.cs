@@ -5,12 +5,10 @@ public class CodingSession
     public int Id { get; set; }
     public required DateTime StartTime { get; set; }
     public required DateTime EndTime { get; set; }
-    public int Duration { get; private set; }
-
-    public CodingSession(DateTime startTime, DateTime endTime, )
+    public int Duration { get; set; }
     
-    private static int CalculateDuration()
+    private double CalculateDuration()
     {
-        return (int)(EndTime - StartTime).TotalMinutes;
+        return (EndTime - StartTime).TotalMinutes;
     }
 }
