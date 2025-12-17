@@ -23,7 +23,7 @@ public class DatabaseContext
         using var connection = CreateConnection();
         connection.Open();
 
-        const string codingSessionsTableQueue = """
+        const string createTableSql = """
                                                  CREATE TABLE IF NOT EXISTS CodingSessions (
                                                      Id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                      StartTime TEXT,
@@ -32,6 +32,6 @@ public class DatabaseContext
                                                  );
                                                 """;
 
-        connection.Execute(codingSessionsTableQueue);
+        connection.Execute(createTableSql);
     }
 }
