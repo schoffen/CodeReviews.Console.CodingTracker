@@ -2,13 +2,13 @@
 
 namespace schoffen.CodingTracker.Validator;
 
-public class ValidationHelper
+public static class ValidationHelper
 {
     public static bool IsDateValid(string date)
     {
         return DateTime.TryParseExact(
             date, 
-            "dd/MM/yyyy HH:mm", 
+            "dd/MM/yyyy HH:mm:ss", 
             CultureInfo.InvariantCulture, 
             DateTimeStyles.None,
             out _);
