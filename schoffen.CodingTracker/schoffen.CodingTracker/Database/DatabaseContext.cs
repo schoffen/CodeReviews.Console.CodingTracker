@@ -27,8 +27,7 @@ public class DatabaseContext
                                                  CREATE TABLE IF NOT EXISTS CodingSessions (
                                                      Id INTEGER PRIMARY KEY AUTOINCREMENT,
                                                      StartTime TEXT,
-                                                     EndTime TEXT,
-                                                     Duration INTEGER
+                                                     EndTime TEXT
                                                  );
                                                 """;
 

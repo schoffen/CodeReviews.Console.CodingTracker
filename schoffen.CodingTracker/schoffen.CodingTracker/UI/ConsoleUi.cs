@@ -8,6 +8,45 @@ namespace schoffen.CodingTracker.UI;
 
 public class ConsoleUi : IUserInterface
 {
+    public void ShowMainMenu()
+    {
+        AnsiConsole.Write(
+            new Markup("[bold cyan]Welcome to Coding Tracker[/]\n[gray]Select an option to begin[/]\n")
+            );
+    }
+
+    public void ShowMySessionsMenu()
+    {
+        AnsiConsole.Write(
+            new Markup("[bold cyan]My Sessions[/]\n[gray]Select an option[/]\n")
+        );
+    }
+
+    public void ShowCodingSession(CodingSession session)
+    {
+        AnsiConsole.Write($"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}");
+    }
+
+    public void ShowSessionsTable(List<CodingSession> sessions)
+    {
+        var table = new Table();
+
+        table.AddColumns("Start", "End", "Duration");
+
+        foreach (var codingSession in sessions)
+        {
+            table.AddRow(codingSession.StartTime.ToLongTimeString(), codingSession.EndTime.ToLongTimeString(),
+                codingSession.GetFormattedDuration());
+        }
+
+        AnsiConsole.Write(table);
+    }
+
+    public void ShowMessage(string message)
+    {
+        AnsiConsole.WriteLine(message);
+    }
+
     public string GetDateTimeInput()
     {
         return AnsiConsole.Prompt(
@@ -62,25 +101,5 @@ public class ConsoleUi : IUserInterface
                 .AddChoices(sessions)
                 .UseConverter(session =>
                     $"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}"));
-    }
-
-    public void ShowSessionsTable(List<CodingSession> sessions)
-    {
-        var table = new Table();
-
-        table.AddColumns("Start", "End", "Duration");
-
-        foreach (var codingSession in sessions)
-        {
-            table.AddRow(codingSession.StartTime.ToLongTimeString(), codingSession.EndTime.ToLongTimeString(),
-                codingSession.GetFormattedDuration());
-        }
-
-        AnsiConsole.Write(table);
-    }
-
-    public void ShowMessage(string message)
-    {
-        AnsiConsole.WriteLine(message);
     }
 }

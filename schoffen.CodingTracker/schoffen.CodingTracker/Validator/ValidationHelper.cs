@@ -13,4 +13,9 @@ public static class ValidationHelper
             DateTimeStyles.None,
             out _);
     }
+
+    public static bool IsEndDateAfterStartDate(DateTime startDate, DateTime endDate)
+    {
+        return endDate > startDate;
+    }
 }

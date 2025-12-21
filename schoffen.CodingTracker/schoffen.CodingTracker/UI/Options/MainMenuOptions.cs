@@ -9,5 +9,7 @@ public enum MainMenuOptions
     [Description("Insert Session")]
     InsertSession,
     [Description("My Sessions")]
-    MySessions
+    MySessions,
+    [Description("Quit")]
+    Quit
 }

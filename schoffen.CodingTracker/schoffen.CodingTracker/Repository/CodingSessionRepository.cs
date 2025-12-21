@@ -4,13 +4,13 @@ using schoffen.CodingTracker.Models;
 
 namespace schoffen.CodingTracker.Repository;
 
-public class CodingSessionRepository(DatabaseContext dbContext)
+public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSessionRepository
 {
     public void InsertCodingSession(CodingSession session)
     {
         const string insertSql = """
-                                 INSERT INTO CodingSessions (StartTime, EndTime, Duration)
-                                 VALUES (@StartTime, @EndTime, @Duration);
+                                 INSERT INTO CodingSessions (StartTime, EndTime)
+                                 VALUES (@StartTime, @EndTime);
                                  """;
         
         using var connection = dbContext.CreateConnection();
@@ -22,7 +22,7 @@ public class CodingSessionRepository(DatabaseContext dbContext)
     {
         const string updateSql = """
                                  UPDATE CodingSessions 
-                                 SET StartTime = @StartTime, EndTime = @EndTime, Duration = @Duration
+                                 SET StartTime = @StartTime, EndTime = @EndTime
                                  WHERE Id = @Id;
                                  """;
         

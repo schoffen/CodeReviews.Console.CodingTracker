@@ -11,5 +11,6 @@ public enum MySessionsOptions
     [Description("UpdateSession")]
     UpdateSession,
     [Description("Delete Session")]
-    DeleteSession
+    DeleteSession,
+    Return
 }

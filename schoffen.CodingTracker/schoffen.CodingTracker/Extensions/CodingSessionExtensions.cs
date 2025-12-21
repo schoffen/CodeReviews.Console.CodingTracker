@@ -6,7 +6,7 @@ public static class CodingSessionExtensions
 {
     private static TimeSpan GetDuration(this CodingSession session)
     {
-        return TimeSpan.FromSeconds(session.Duration);
+        return TimeSpan.FromSeconds(session.DurationInSeconds);
     }
 
     public static string GetFormattedDuration(this CodingSession session)
