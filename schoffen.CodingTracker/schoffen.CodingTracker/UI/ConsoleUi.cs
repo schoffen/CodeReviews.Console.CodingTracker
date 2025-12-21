@@ -15,7 +15,7 @@ public class ConsoleUi : IUserInterface
                 .Validate(input => ValidationHelper.IsDateValid(input)
                     ? ValidationResult.Success()
                     : ValidationResult.Error("Invalid date. Make sure to use this format: dd/MM/yyyy HH:mm:ss"))
-            );
+        );
     }
 
     public bool GetUserConfirmation(string message)
@@ -34,7 +34,7 @@ public class ConsoleUi : IUserInterface
             new SelectionPrompt<MainMenuOptions>()
                 .UseConverter(option => option.GetDescription())
                 .AddChoices(Enum.GetValues<MainMenuOptions>())
-            );
+        );
     }
 
     public MySessionsOptions GetMySessionsOption()
@@ -43,7 +43,7 @@ public class ConsoleUi : IUserInterface
             new SelectionPrompt<MySessionsOptions>()
                 .UseConverter(option => option.GetDescription())
                 .AddChoices(Enum.GetValues<MySessionsOptions>())
-            );
+        );
     }
 
     public FilterOrderOptions GetFilterOrderOption()
@@ -52,7 +52,7 @@ public class ConsoleUi : IUserInterface
             new SelectionPrompt<FilterOrderOptions>()
                 .UseConverter(option => option.GetDescription())
                 .AddChoices(Enum.GetValues<FilterOrderOptions>())
-            );
+        );
     }
 
     public CodingSession SelectCodingSession(List<CodingSession> sessions)
@@ -61,17 +61,22 @@ public class ConsoleUi : IUserInterface
             new SelectionPrompt<CodingSession>()
                 .AddChoices(sessions)
                 .UseConverter(session =>
-                    {
-                        var durationSpam = TimeSpan.FromSeconds(session.Duration);
-                        return $@"{session.StartTime} | {session.EndTime} | {durationSpam:hh\:mm\:ss}";
-                    }
-            ));
+                    $"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}"));
     }
 
     public void ShowSessionsTable(List<CodingSession> sessions)
     {
-        // TODO: finish this last class method
-        throw new NotImplementedException();
+        var table = new Table();
+
+        table.AddColumns("Start", "End", "Duration");
+
+        foreach (var codingSession in sessions)
+        {
+            table.AddRow(codingSession.StartTime.ToLongTimeString(), codingSession.EndTime.ToLongTimeString(),
+                codingSession.GetFormattedDuration());
+        }
+
+        AnsiConsole.Write(table);
     }
 
     public void ShowMessage(string message)
