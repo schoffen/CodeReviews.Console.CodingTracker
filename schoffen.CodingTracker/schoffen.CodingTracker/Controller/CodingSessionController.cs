@@ -99,30 +99,46 @@ public class CodingSessionController(IUserInterface ui, ICodingSessionRepository
 
     private void MySessionsMenu()
     {
-        Console.Clear();
+        var isRunning = true;
         
-        ui.ShowMySessionsMenu();
-        var option = ui.GetMySessionsOption();
-
-        switch (option)
+        while (isRunning)
         {
-            case MySessionsOptions.FilterByPeriod:
-                break;
-            case MySessionsOptions.FilterByOrder:
-                break;
-            case MySessionsOptions.UpdateSession:
-                break;
-            case MySessionsOptions.DeleteSession:
-                break;
-            case MySessionsOptions.Return:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
+            ui.ShowMySessionsMenu();
+            var option = ui.GetMySessionsOption();
+
+            switch (option)
+            {
+                case MySessionsOptions.ShowAllSessions:
+                    ui.ShowSessionsTable(repository.GetAllCodingSessions());
+                    break;
+                case MySessionsOptions.FilterByPeriod:
+                    break;
+                case MySessionsOptions.FilterByOrder:
+                    break;
+                case MySessionsOptions.SelectSession:
+                    break;
+                case MySessionsOptions.Return:
+                    isRunning = false;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
     }
 
-    private void UpdateSession(CodingSession session)
+    private void FilterByPeriod(FilterPeriodOptions period)
     {
-        // TODO
+        // TODO continue this part
+        switch (period)
+        {
+            case FilterPeriodOptions.Day:
+                break;
+            case FilterPeriodOptions.Week:
+                break;
+            case FilterPeriodOptions.Year:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(period), period, null);
+        }
     }
 }
