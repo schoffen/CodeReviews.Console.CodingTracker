@@ -48,4 +48,10 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
 
         return connection.Query<CodingSession>(getSql).ToList();
     }
+
+    public List<CodingSession> GetCodingSessionsByDate()
+    {
+        // TODO
+        throw new NotImplementedException();
+    }
 }

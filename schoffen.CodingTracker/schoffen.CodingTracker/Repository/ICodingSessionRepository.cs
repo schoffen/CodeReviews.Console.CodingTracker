@@ -9,4 +9,5 @@ public interface ICodingSessionRepository
     public void UpdateCodingSession(CodingSession session);
     public void DeleteCodingSession(int codingSessionId);
     public List<CodingSession> GetAllCodingSessions();
+    public List<CodingSession> GetCodingSessionsByDate();
 }

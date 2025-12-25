@@ -1,9 +1,18 @@
-﻿namespace schoffen.CodingTracker;
+﻿using schoffen.CodingTracker.Controller;
+using schoffen.CodingTracker.Repository;
+using schoffen.CodingTracker.UI;
+
+namespace schoffen.CodingTracker;
 
 internal abstract class Program
 {
     public static void Main()
     {
-        var db = new Database.DatabaseContext();
+        var dbContext = new Database.DatabaseContext();
+        var repository = new CodingSessionRepository(dbContext);
+        var ui = new ConsoleUi();
+        var controller = new CodingSessionController(ui, repository);
+        
+        controller.Run();
     }
 }

@@ -10,36 +10,41 @@ public class ConsoleUi : IUserInterface
 {
     public void ShowMainMenu()
     {
+        AnsiConsole.Clear();
         AnsiConsole.Write(
-            new Markup("[bold cyan]Welcome to Coding Tracker[/]\n[gray]Select an option to begin[/]\n")
+            new Markup("[bold cyan]Welcome to Coding Tracker[/]\n\n[cyan]Select an option:[/]\n")
             );
     }
 
     public void ShowMySessionsMenu()
     {
+        AnsiConsole.Clear();
         AnsiConsole.Write(
-            new Markup("[bold cyan]My Sessions[/]\n[gray]Select an option[/]\n")
+            new Markup("[bold cyan]My Sessions[/]\n\n[cyan]Select an option:[/]\n")
         );
     }
 
     public void ShowCodingSession(CodingSession session)
     {
-        AnsiConsole.Write($"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}");
+        AnsiConsole.Write($"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}\n");
     }
 
     public void ShowSessionsTable(List<CodingSession> sessions)
     {
+        const string format = "dd/MM/yyyy HH:mm:ss";
         var table = new Table();
 
         table.AddColumns("Start", "End", "Duration");
 
         foreach (var codingSession in sessions)
         {
-            table.AddRow(codingSession.StartTime.ToLongTimeString(), codingSession.EndTime.ToLongTimeString(),
+            table.AddRow(codingSession.StartTime.ToString(format), codingSession.EndTime.ToString(format),
                 codingSession.GetFormattedDuration());
         }
 
         AnsiConsole.Write(table);
+        AnsiConsole.WriteLine("\nPress any key to return");
+        Console.ReadKey();
     }
 
     public void ShowMessage(string message)

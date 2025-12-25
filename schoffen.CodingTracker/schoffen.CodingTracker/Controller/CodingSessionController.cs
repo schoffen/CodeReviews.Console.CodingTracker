@@ -27,6 +27,7 @@ public class CodingSessionController(IUserInterface ui, ICodingSessionRepository
                     InsertSession();
                     break;
                 case MainMenuOptions.MySessions:
+                    MySessionsMenu();
                     break;
                 case MainMenuOptions.Quit:
                     isRunning = false;
@@ -66,7 +67,7 @@ public class CodingSessionController(IUserInterface ui, ICodingSessionRepository
         repository.InsertCodingSession(codingSession);
         ui.ShowCodingSession(codingSession);
         
-        ui.ShowMessage("Press any key to continue");
+        ui.ShowMessage("\nPress any key to continue");
         Console.ReadKey();
     }
 
