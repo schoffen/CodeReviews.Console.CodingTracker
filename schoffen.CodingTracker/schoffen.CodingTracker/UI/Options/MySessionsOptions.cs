@@ -8,8 +8,8 @@ public enum MySessionsOptions
     ShowAllSessions,
     [Description("Filter By Period")]
     FilterByPeriod,
-    [Description("Filter By Order")]
-    FilterByOrder,
+    [Description("Sort Order")]
+    SortOrder,
     [Description("Select Session")]
     SelectSession,
     Return

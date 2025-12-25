@@ -1,4 +1,6 @@
-﻿using schoffen.CodingTracker.Extensions;
+﻿using System.Diagnostics;
+using schoffen.CodingTracker.Enums;
+using schoffen.CodingTracker.Extensions;
 using schoffen.CodingTracker.Models;
 using schoffen.CodingTracker.UI.Options;
 using schoffen.CodingTracker.Validator;
@@ -52,13 +54,40 @@ public class ConsoleUi : IUserInterface
         AnsiConsole.WriteLine(message);
     }
 
-    public string GetDateTimeInput()
+    public string GetDateTimeInput(DateType dateType)
+    {
+        var label  = dateType switch
+        {
+            DateType.Start => "start",
+            DateType.End => "end",
+            _ => throw new ArgumentOutOfRangeException(nameof(dateType))
+        };
+        
+        return AnsiConsole.Prompt(
+            new TextPrompt<string>($"Enter {label } (format: dd/MM/yyyy HH:mm:ss):")
+                .Validate(input => ValidationHelper.IsDateTimeValid(input)
+                    ? ValidationResult.Success()
+                    : ValidationResult.Error("Invalid. Make sure to use this format: dd/MM/yyyy HH:mm:ss\nDate time: "))
+        );
+    }
+
+    public string GetDateInput()
     {
         return AnsiConsole.Prompt(
-            new TextPrompt<string>("Enter datetime (format: dd/MM/yyyy HH:mm:ss)")
+            new TextPrompt<string>("Enter date for reference (format: dd/MM/yyyy):")
                 .Validate(input => ValidationHelper.IsDateValid(input)
                     ? ValidationResult.Success()
-                    : ValidationResult.Error("Invalid date. Make sure to use this format: dd/MM/yyyy HH:mm:ss"))
+                    : ValidationResult.Error("Invalid. Make sure to use this format: dd/MM/yyyy HH:mm:ss\nDate: "))
+        );
+    }
+
+    public int GetYearInput()
+    {
+        return AnsiConsole.Prompt(
+            new TextPrompt<int>("Enter year for reference: ")
+                .Validate(input => ValidationHelper.IsYearValid(input)
+                    ? ValidationResult.Success()
+                    : ValidationResult.Error("Invalid. Make sure you only type number and not a future year"))
         );
     }
 
@@ -90,12 +119,12 @@ public class ConsoleUi : IUserInterface
         );
     }
 
-    public FilterOrderOptions GetFilterOrderOption()
+    public SortDirection GetSortDirectionOption()
     {
         return AnsiConsole.Prompt(
-            new SelectionPrompt<FilterOrderOptions>()
+            new SelectionPrompt<SortDirection>()
                 .UseConverter(option => option.GetDescription())
-                .AddChoices(Enum.GetValues<FilterOrderOptions>())
+                .AddChoices(Enum.GetValues<SortDirection>())
         );
     }
 
@@ -106,5 +135,14 @@ public class ConsoleUi : IUserInterface
                 .AddChoices(sessions)
                 .UseConverter(session =>
                     $"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}"));
+    }
+
+    public FilterPeriodOptions GetFilterPeriodOption()
+    {
+        return AnsiConsole.Prompt(
+            new SelectionPrompt<FilterPeriodOptions>()
+                .UseConverter(option => option.GetDescription())
+                .AddChoices(Enum.GetValues<FilterPeriodOptions>())
+        );
     }
 }

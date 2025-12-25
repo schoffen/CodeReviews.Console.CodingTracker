@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using schoffen.CodingTracker.Enums;
+using schoffen.CodingTracker.Extensions;
 using schoffen.CodingTracker.Models;
 using schoffen.CodingTracker.Repository;
 using schoffen.CodingTracker.UI;
@@ -75,8 +77,8 @@ public class CodingSessionController(IUserInterface ui, ICodingSessionRepository
     {
         Console.Clear();
 
-        var startDate = DateTime.Parse(ui.GetDateTimeInput());
-        var endDate = DateTime.Parse(ui.GetDateTimeInput());
+        var startDate = DateTime.Parse(ui.GetDateTimeInput(DateType.Start));
+        var endDate = DateTime.Parse(ui.GetDateTimeInput(DateType.End));
 
         if (ValidationHelper.IsEndDateAfterStartDate(startDate, endDate))
         {
@@ -113,8 +115,12 @@ public class CodingSessionController(IUserInterface ui, ICodingSessionRepository
                     ui.ShowSessionsTable(repository.GetAllCodingSessions());
                     break;
                 case MySessionsOptions.FilterByPeriod:
+                    FilterByPeriod(ui.GetFilterPeriodOption());
                     break;
-                case MySessionsOptions.FilterByOrder:
+                case MySessionsOptions.SortOrder:
+                    var sortOrder = ui.GetSortDirectionOption();
+                    var codingSessions = repository.GetAllCodingSessionsOrderedByStartTime(sortOrder);
+                    ui.ShowSessionsTable(codingSessions);
                     break;
                 case MySessionsOptions.SelectSession:
                     break;
@@ -129,14 +135,20 @@ public class CodingSessionController(IUserInterface ui, ICodingSessionRepository
 
     private void FilterByPeriod(FilterPeriodOptions period)
     {
-        // TODO continue this part
         switch (period)
         {
             case FilterPeriodOptions.Day:
+                var referenceDate = DateTime.Parse(ui.GetDateInput());
+                ui.ShowSessionsTable(repository.GetCodingSessionsByDate(referenceDate));
                 break;
             case FilterPeriodOptions.Week:
+                var referenceWeekDate = DateTime.Parse(ui.GetDateInput());
+                var week = referenceWeekDate.GetWeekRange();
+                ui.ShowSessionsTable(repository.GetCodingSessionsByWeek(week.start, week.end));
                 break;
             case FilterPeriodOptions.Year:
+                var referenceYear = ui.GetYearInput();
+                ui.ShowSessionsTable(repository.GetCodingSessionsByYear(referenceYear));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(period), period, null);
