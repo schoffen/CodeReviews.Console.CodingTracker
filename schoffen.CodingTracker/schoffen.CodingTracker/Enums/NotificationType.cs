@@ -1,6 +1,6 @@
-﻿namespace schoffen.CodingTracker.UI;
+﻿namespace schoffen.CodingTracker.Enums;
 
-public enum UiMessage
+public enum NotificationType
 {
     StartingNewSession,
     TrackingSession,
@@ -11,5 +11,9 @@ public enum UiMessage
     
     OperationCanceled,
     SessionUpdated,
-    SessionDeleted
+    SessionDeleted,
+    
+    ConfirmUpdate,
+    ConfirmDelete,
+    ConfirmSelectSession
 }

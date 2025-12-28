@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using schoffen.CodingTracker.Enums;
+﻿using schoffen.CodingTracker.Enums;
 using schoffen.CodingTracker.Exceptions;
 using schoffen.CodingTracker.Extensions;
 using schoffen.CodingTracker.Models;
@@ -36,7 +35,7 @@ public class ConsoleUi : IUserInterface
     {
         if (sessions.Count == 0)
         {
-            ShowMessage(UiMessage.NoSessionsFound);
+            NotifyUser(NotificationType.NoSessionsFound);
             WaitForUser();
             return false;
         }
@@ -66,26 +65,29 @@ public class ConsoleUi : IUserInterface
         );
     }
 
-    public void ShowMessage(UiMessage uiMessage)
+    public void NotifyUser(NotificationType notificationType)
     {
-        var text = uiMessage switch
+        var text = notificationType switch
         {
-            UiMessage.StartingNewSession => "Starting New Session",
-            UiMessage.TrackingSession => "Tracking session...",
-            UiMessage.PressEnterToStop => "Press ENTER to stop",
-            UiMessage.NoSessionsFound => "No sessions found",
-            UiMessage.OperationCanceled => "Operation Canceled",
-            UiMessage.SessionUpdated => "Your coding session was updated",
-            UiMessage.SessionDeleted => "Your coding session was deleted",
-            UiMessage.OnlyOneSessionFound => "Only one session found. Selecting it automatically.",
-            _ => throw new ArgumentOutOfRangeException(nameof(uiMessage), uiMessage, null)
+            NotificationType.StartingNewSession => "Starting New Session",
+            NotificationType.TrackingSession => "Tracking session...",
+            NotificationType.PressEnterToStop => "Press ENTER to stop",
+            NotificationType.NoSessionsFound => "No sessions found",
+            NotificationType.OperationCanceled => "Operation Canceled",
+            NotificationType.SessionUpdated => "Your coding session was updated",
+            NotificationType.SessionDeleted => "Your coding session was deleted",
+            NotificationType.OnlyOneSessionFound => "Only one session found. Selecting it automatically.",
+            NotificationType.ConfirmUpdate => "Are you sure you want to update?",
+            NotificationType.ConfirmDelete => "Are you sure you want to delete?",
+            NotificationType.ConfirmSelectSession => "Would you like to select a session?",
+            _ => throw new ArgumentOutOfRangeException(nameof(notificationType), notificationType, null)
         };
         
         AnsiConsole.MarkupLine(text);
         WaitForUser();
     }
 
-    public void ShowExceptionMessage(CodingTrackerException exception)
+    public void NotifyUserException(CodingTrackerException exception)
     {
         AnsiConsole.MarkupLine(exception.Message);
         WaitForUser();
@@ -138,14 +140,14 @@ public class ConsoleUi : IUserInterface
         );
     }
 
-    public bool GetUserConfirmation(UiConfirmationMessages uiConfirmationMessages)
+    public bool GetUserConfirmationInput(ConfirmationType confirmationType)
     {
-        var text = uiConfirmationMessages switch
+        var text = confirmationType switch
         {
-            UiConfirmationMessages.ConfirmUpdate => "Are you sure you want to update?",
-            UiConfirmationMessages.ConfirmDelete => "Are you sure you want to delete?",
-            UiConfirmationMessages.ConfirmSelectSession => "Would you like to select a session?",
-            _ => throw new ArgumentOutOfRangeException(nameof(uiConfirmationMessages), uiConfirmationMessages, null)
+            ConfirmationType.ConfirmUpdate => "Are you sure you want to update?",
+            ConfirmationType.ConfirmDelete => "Are you sure you want to delete?",
+            ConfirmationType.ConfirmSelectSession => "Would you like to select a session?",
+            _ => throw new ArgumentOutOfRangeException(nameof(confirmationType), confirmationType, null)
         };
         
         return AnsiConsole.Prompt(
@@ -175,7 +177,7 @@ public class ConsoleUi : IUserInterface
                     .UseConverter(session =>
                         $"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}"));
         
-        ShowMessage(UiMessage.OnlyOneSessionFound);
+        NotifyUser(NotificationType.OnlyOneSessionFound);
         WaitForUser();
         return sessions[0];
     }
@@ -189,7 +191,7 @@ public class ConsoleUi : IUserInterface
         );
     }
 
-    public void WaitForUser()
+    private static void WaitForUser()
     {
         AnsiConsole.WriteLine("\nPress any key to continue");
         Console.ReadKey();

@@ -32,13 +32,13 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
         connection.Execute(updateSql, session);
     }
 
-    public void DeleteCodingSession(int codingSessionId)
+    public void DeleteCodingSession(CodingSession session)
     {
         const string deleteSql = "DELETE FROM CodingSessions WHERE Id = @Id;";
 
         using var connection = dbContext.CreateConnection();
 
-        connection.Execute(deleteSql, new { Id = codingSessionId });
+        connection.Execute(deleteSql, session);
     }
 
     public List<CodingSession> GetAllCodingSessions()
@@ -48,6 +48,15 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
         using var connection = dbContext.CreateConnection();
 
         return connection.Query<CodingSession>(getSql).ToList();
+    }
+
+    public CodingSession? GetCodingSessionById(int id)
+    {
+        const string getSql = "SELECT * FROM CodingSessions WHERE Id = @Id;";
+
+        using var connection = dbContext.CreateConnection();
+
+        return connection.QuerySingleOrDefault<CodingSession>(getSql, new { Id = id });
     }
 
     public List<CodingSession> GetAllCodingSessionsOrderedByStartTime(SortDirection sortDirection)

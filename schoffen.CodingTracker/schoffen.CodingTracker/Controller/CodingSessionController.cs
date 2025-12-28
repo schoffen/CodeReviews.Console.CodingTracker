@@ -2,7 +2,6 @@
 using schoffen.CodingTracker.Exceptions;
 using schoffen.CodingTracker.Extensions;
 using schoffen.CodingTracker.Models;
-using schoffen.CodingTracker.Repository;
 using schoffen.CodingTracker.Services;
 using schoffen.CodingTracker.UI;
 using schoffen.CodingTracker.UI.Options;
@@ -11,15 +10,14 @@ namespace schoffen.CodingTracker.Controller;
 
 public class CodingSessionController(
     IUserInterface ui,
-    ICodingSessionRepository repository,
     CodingSessionService service)
 {
-    public void Run()
+    public void Start()
     {
-        MainMenu();
+        MainMenuLoop();
     }
 
-    private void MainMenu()
+    private void MainMenuLoop()
     {
         var isRunning = true;
 
@@ -37,7 +35,7 @@ public class CodingSessionController(
                     ExecuteInsertSession();
                     break;
                 case MainMenuOptions.MySessions:
-                    MySessionsMenu();
+                    MySessionsMenuLoop();
                     break;
                 case MainMenuOptions.Quit:
                     isRunning = false;
@@ -51,7 +49,7 @@ public class CodingSessionController(
     private void ExecuteStartNewSession()
     {
         Console.Clear();
-        ui.ShowMessage(UiMessage.StartingNewSession);
+        ui.NotifyUser(NotificationType.StartingNewSession);
 
         try
         {
@@ -60,7 +58,7 @@ public class CodingSessionController(
         }
         catch (CodingTrackerException e)
         {
-            ui.ShowExceptionMessage(e);
+            ui.NotifyUserException(e);
         }
     }
 
@@ -69,8 +67,8 @@ public class CodingSessionController(
         var tracker = new SessionTracker();
         tracker.Start();
 
-        ui.ShowMessage(UiMessage.TrackingSession);
-        ui.ShowMessage(UiMessage.PressEnterToStop);
+        ui.NotifyUser(NotificationType.TrackingSession);
+        ui.NotifyUser(NotificationType.PressEnterToStop);
 
         while (!Console.KeyAvailable)
         {
@@ -82,7 +80,7 @@ public class CodingSessionController(
 
         tracker.Stop();
 
-        return service.CreateAndSave(tracker.StartDateTime, tracker.EndDateTime);
+        return service.SaveSession(tracker.StartDateTime, tracker.EndDateTime);
     }
 
     private void ExecuteInsertSession()
@@ -92,18 +90,14 @@ public class CodingSessionController(
         var startDate = ui.GetDateTimeInput(DateType.Start);
         var endDate = ui.GetDateTimeInput(DateType.End);
 
-        try
+        ExecuteSafely(() =>
         {
-            var session = service.CreateAndSave(startDate, endDate);
+            var session = service.SaveSession(startDate, endDate);
             ui.ShowCodingSession(session);
-        }
-        catch (CodingTrackerException e)
-        {
-            ui.ShowExceptionMessage(e);
-        }
+        });
     }
 
-    private void MySessionsMenu()
+    private void MySessionsMenuLoop()
     {
         var isRunning = true;
         while (isRunning)
@@ -115,20 +109,24 @@ public class CodingSessionController(
             switch (option)
             {
                 case MySessionsOptions.ShowAllSessions:
-                    codingSessions = repository.GetAllCodingSessions();
+                    codingSessions = service.GetAllSessions();
 
                     if (ui.TryShowSessionsTable(codingSessions))
                         SelectCodingSessionFromList(codingSessions);
+
                     break;
                 case MySessionsOptions.FilterByPeriod:
                     FilterByPeriod(ui.GetFilterPeriodOption());
+
                     break;
                 case MySessionsOptions.SortOrder:
-                    var sortOrder = ui.GetSortDirectionOption();
-                    codingSessions = repository.GetAllCodingSessionsOrderedByStartTime(sortOrder);
+                    var sortDirection = ui.GetSortDirectionOption();
+
+                    codingSessions = service.GetAllSessionsSortedByStartTime(sortDirection);
 
                     if (ui.TryShowSessionsTable(codingSessions))
                         SelectCodingSessionFromList(codingSessions);
+
                     break;
                 case MySessionsOptions.Return:
                     isRunning = false;
@@ -147,16 +145,16 @@ public class CodingSessionController(
         {
             case FilterPeriodOptions.Day:
                 var referenceDate = ui.GetDateInput();
-                codingSessions = repository.GetCodingSessionsByDate(referenceDate);
+                codingSessions = service.GetSessionsByDate(referenceDate);
                 break;
             case FilterPeriodOptions.Week:
                 var referenceWeekDate = ui.GetDateInput();
                 var week = referenceWeekDate.GetWeekRange();
-                codingSessions = repository.GetCodingSessionsByWeek(week.start, week.end);
+                codingSessions = service.GetSessionsByWeekRange(week.start, week.end);
                 break;
             case FilterPeriodOptions.Year:
                 var referenceYear = ui.GetYearInput();
-                codingSessions = repository.GetCodingSessionsByYear(referenceYear);
+                codingSessions = service.GetSessionsByYear(referenceYear);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(period), period, null);
@@ -168,7 +166,7 @@ public class CodingSessionController(
 
     private void SelectCodingSessionFromList(List<CodingSession> codingSessions)
     {
-        if (!ui.GetUserConfirmation(UiConfirmationMessages.ConfirmSelectSession))
+        if (!ui.GetUserConfirmationInput(ConfirmationType.ConfirmSelectSession))
             return;
 
         var session = ui.SelectCodingSession(codingSessions);
@@ -196,33 +194,44 @@ public class CodingSessionController(
         }
     }
 
-    private void ExecuteUpdateSession(CodingSession codingSession)
+    private void ExecuteUpdateSession(CodingSession sessionToUpdate)
     {
         var newStartDate = ui.GetDateTimeInput(DateType.Start);
         var newEndDate = ui.GetDateTimeInput(DateType.End);
 
-        if (!ui.GetUserConfirmation(UiConfirmationMessages.ConfirmUpdate))
+        if (!ui.GetUserConfirmationInput(ConfirmationType.ConfirmUpdate))
         {
-            ui.ShowMessage(UiMessage.OperationCanceled);
+            ui.NotifyUser(NotificationType.OperationCanceled);
             return;
         }
 
-        repository.UpdateCodingSession(new CodingSession
-            { Id = codingSession.Id, StartTime = newStartDate, EndTime = newEndDate });
+        ExecuteSafely(() => service.UpdateSession(sessionToUpdate, newStartDate, newEndDate));
 
-        ui.ShowMessage(UiMessage.SessionUpdated);
+        ui.NotifyUser(NotificationType.SessionUpdated);
     }
 
     private void ExecuteDeleteSession(CodingSession codingSession)
     {
-        if (!ui.GetUserConfirmation(UiConfirmationMessages.ConfirmDelete))
+        if (!ui.GetUserConfirmationInput(ConfirmationType.ConfirmDelete))
         {
-            ui.ShowMessage(UiMessage.OperationCanceled);
+            ui.NotifyUser(NotificationType.OperationCanceled);
             return;
         }
 
-        repository.DeleteCodingSession(codingSession.Id);
+        ExecuteSafely(() => service.DeleteSession(codingSession));
 
-        ui.ShowMessage(UiMessage.SessionDeleted);
+        ui.NotifyUser(NotificationType.SessionDeleted);
+    }
+
+    private void ExecuteSafely(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (CodingTrackerException e)
+        {
+            ui.NotifyUserException(e);
+        }
     }
 }
