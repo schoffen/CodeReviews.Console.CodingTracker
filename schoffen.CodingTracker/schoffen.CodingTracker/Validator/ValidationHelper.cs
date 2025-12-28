@@ -32,11 +32,6 @@ public static class ValidationHelper
             out var dateTime) && IsDateTimeNotInFuture(dateTime);
     }
 
-    public static bool IsEndDateAfterStartDate(DateTime startDate, DateTime endDate)
-    {
-        return endDate > startDate;
-    }
-
     private static bool IsDateTimeNotInFuture(DateTime dateTime)
     {
         return dateTime <= DateTime.Now;
