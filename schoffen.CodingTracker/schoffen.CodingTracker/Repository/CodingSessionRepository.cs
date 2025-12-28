@@ -38,7 +38,7 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
 
         using var connection = dbContext.CreateConnection();
 
-        connection.Execute(deleteSql, codingSessionId);
+        connection.Execute(deleteSql, new { Id = codingSessionId });
     }
 
     public List<CodingSession> GetAllCodingSessions()

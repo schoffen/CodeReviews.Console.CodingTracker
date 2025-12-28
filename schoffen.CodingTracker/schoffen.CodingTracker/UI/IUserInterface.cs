@@ -1,4 +1,5 @@
 ﻿using schoffen.CodingTracker.Enums;
+using schoffen.CodingTracker.Exceptions;
 using schoffen.CodingTracker.Models;
 using schoffen.CodingTracker.UI.Options;
 
@@ -9,18 +10,22 @@ public interface IUserInterface
     public void ShowMainMenu();
     public void ShowMySessionsMenu();
     public void ShowCodingSession(CodingSession session);
-    public void ShowSessionsTable(List<CodingSession> sessions);
-    public void ShowMessage(string message);
-    
-    public string GetDateTimeInput(DateType dateType);
-    public string GetDateInput();
+    public bool TryShowSessionsTable(List<CodingSession> sessions);
+    public void ShowMessage(UiMessage uiMessage);
+    public void ShowExceptionMessage(CodingTrackerException exception);
+    public void ShowSelectedSessionMenu(CodingSession codingSession);
+    public void ShowElapsedTime(TimeSpan elapsed);
+    public DateTime GetDateTimeInput(DateType dateType);
+    public DateTime GetDateInput();
     public int GetYearInput();
-    public bool GetUserConfirmation(string message);
-    
+    public bool GetUserConfirmation(UiConfirmationMessages uiConfirmationMessages);
+
     public MainMenuOptions GetMainMenuOption();
     public MySessionsOptions GetMySessionsOption();
     public SortDirection GetSortDirectionOption();
     public FilterPeriodOptions GetFilterPeriodOption();
-    
+    public SelectedSessionOptions GetSelectedSessionOption();
+
     public CodingSession SelectCodingSession(List<CodingSession> sessions);
+    public void WaitForUser();
 }

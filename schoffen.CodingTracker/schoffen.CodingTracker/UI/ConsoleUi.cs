@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using schoffen.CodingTracker.Enums;
+using schoffen.CodingTracker.Exceptions;
 using schoffen.CodingTracker.Extensions;
 using schoffen.CodingTracker.Models;
 using schoffen.CodingTracker.UI.Options;
@@ -15,7 +16,7 @@ public class ConsoleUi : IUserInterface
         AnsiConsole.Clear();
         AnsiConsole.Write(
             new Markup("[bold cyan]Welcome to Coding Tracker[/]\n\n[cyan]Select an option:[/]\n")
-            );
+        );
     }
 
     public void ShowMySessionsMenu()
@@ -28,11 +29,18 @@ public class ConsoleUi : IUserInterface
 
     public void ShowCodingSession(CodingSession session)
     {
-        AnsiConsole.Write($"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}\n");
+        AnsiConsole.WriteLine($"\n{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}\n");
     }
 
-    public void ShowSessionsTable(List<CodingSession> sessions)
+    public bool TryShowSessionsTable(List<CodingSession> sessions)
     {
+        if (sessions.Count == 0)
+        {
+            ShowMessage(UiMessage.NoSessionsFound);
+            WaitForUser();
+            return false;
+        }
+        
         const string format = "dd/MM/yyyy HH:mm:ss";
         var table = new Table();
 
@@ -45,40 +53,79 @@ public class ConsoleUi : IUserInterface
         }
 
         AnsiConsole.Write(table);
-        AnsiConsole.WriteLine("\nPress any key to return");
-        Console.ReadKey();
+        WaitForUser();
+        return true;
     }
 
-    public void ShowMessage(string message)
+    public void ShowSelectedSessionMenu(CodingSession codingSession)
     {
-        AnsiConsole.WriteLine(message);
+        AnsiConsole.Clear();
+        AnsiConsole.Write(
+            new Markup(
+                $"[bold cyan]Session {codingSession.StartTime} | {codingSession.EndTime} | {codingSession.GetFormattedDuration()}:[/]\n\n[cyan]Select an option:[/]\n")
+        );
     }
 
-    public string GetDateTimeInput(DateType dateType)
+    public void ShowMessage(UiMessage uiMessage)
     {
-        var label  = dateType switch
+        var text = uiMessage switch
+        {
+            UiMessage.StartingNewSession => "Starting New Session",
+            UiMessage.TrackingSession => "Tracking session...",
+            UiMessage.PressEnterToStop => "Press ENTER to stop",
+            UiMessage.NoSessionsFound => "No sessions found",
+            UiMessage.OperationCanceled => "Operation Canceled",
+            UiMessage.SessionUpdated => "Your coding session was updated",
+            UiMessage.SessionDeleted => "Your coding session was deleted",
+            UiMessage.OnlyOneSessionFound => "Only one session found. Selecting it automatically.",
+            _ => throw new ArgumentOutOfRangeException(nameof(uiMessage), uiMessage, null)
+        };
+        
+        AnsiConsole.MarkupLine(text);
+        WaitForUser();
+    }
+
+    public void ShowExceptionMessage(CodingTrackerException exception)
+    {
+        AnsiConsole.MarkupLine(exception.Message);
+        WaitForUser();
+    }
+
+    public void ShowElapsedTime(TimeSpan elapsed)
+    {
+        Console.SetCursorPosition(0, Console.CursorTop);
+        AnsiConsole.Write($@"Elapsed time: {elapsed:hh\:mm\:ss}");
+    }
+
+    public DateTime GetDateTimeInput(DateType dateType)
+    {
+        var label = dateType switch
         {
             DateType.Start => "start",
             DateType.End => "end",
             _ => throw new ArgumentOutOfRangeException(nameof(dateType))
         };
-        
-        return AnsiConsole.Prompt(
-            new TextPrompt<string>($"Enter {label } (format: dd/MM/yyyy HH:mm:ss):")
+
+        var dateTimeInput = AnsiConsole.Prompt(
+            new TextPrompt<string>($"Enter {label} date (format: dd/MM/yyyy HH:mm:ss):")
                 .Validate(input => ValidationHelper.IsDateTimeValid(input)
                     ? ValidationResult.Success()
                     : ValidationResult.Error("Invalid. Make sure to use this format: dd/MM/yyyy HH:mm:ss\nDate time: "))
         );
+
+        return DateTime.Parse(dateTimeInput);
     }
 
-    public string GetDateInput()
+    public DateTime GetDateInput()
     {
-        return AnsiConsole.Prompt(
+        var dateInput = AnsiConsole.Prompt(
             new TextPrompt<string>("Enter date for reference (format: dd/MM/yyyy):")
                 .Validate(input => ValidationHelper.IsDateValid(input)
                     ? ValidationResult.Success()
-                    : ValidationResult.Error("Invalid. Make sure to use this format: dd/MM/yyyy HH:mm:ss\nDate: "))
+                    : ValidationResult.Error("Invalid. Make sure to use this format: dd/MM/yyyy\nDate: "))
         );
+
+        return DateTime.Parse(dateInput);
     }
 
     public int GetYearInput()
@@ -91,58 +138,60 @@ public class ConsoleUi : IUserInterface
         );
     }
 
-    public bool GetUserConfirmation(string message)
+    public bool GetUserConfirmation(UiConfirmationMessages uiConfirmationMessages)
     {
+        var text = uiConfirmationMessages switch
+        {
+            UiConfirmationMessages.ConfirmUpdate => "Are you sure you want to update?",
+            UiConfirmationMessages.ConfirmDelete => "Are you sure you want to delete?",
+            UiConfirmationMessages.ConfirmSelectSession => "Would you like to select a session?",
+            _ => throw new ArgumentOutOfRangeException(nameof(uiConfirmationMessages), uiConfirmationMessages, null)
+        };
+        
         return AnsiConsole.Prompt(
-            new TextPrompt<bool>(message)
+            new TextPrompt<bool>(text)
                 .AddChoice(true)
                 .AddChoice(false)
                 .DefaultValue(true)
                 .WithConverter(choice => choice ? "y" : "n"));
     }
 
-    public MainMenuOptions GetMainMenuOption()
-    {
-        return AnsiConsole.Prompt(
-            new SelectionPrompt<MainMenuOptions>()
-                .UseConverter(option => option.GetDescription())
-                .AddChoices(Enum.GetValues<MainMenuOptions>())
-        );
-    }
+    public MainMenuOptions GetMainMenuOption() => PromptEnum<MainMenuOptions>();
 
-    public MySessionsOptions GetMySessionsOption()
-    {
-        return AnsiConsole.Prompt(
-            new SelectionPrompt<MySessionsOptions>()
-                .UseConverter(option => option.GetDescription())
-                .AddChoices(Enum.GetValues<MySessionsOptions>())
-        );
-    }
+    public MySessionsOptions GetMySessionsOption() => PromptEnum<MySessionsOptions>();
 
-    public SortDirection GetSortDirectionOption()
-    {
-        return AnsiConsole.Prompt(
-            new SelectionPrompt<SortDirection>()
-                .UseConverter(option => option.GetDescription())
-                .AddChoices(Enum.GetValues<SortDirection>())
-        );
-    }
+    public SortDirection GetSortDirectionOption() => PromptEnum<SortDirection>();
+
+    public FilterPeriodOptions GetFilterPeriodOption() => PromptEnum<FilterPeriodOptions>();
+
+    public SelectedSessionOptions GetSelectedSessionOption() => PromptEnum<SelectedSessionOptions>();
 
     public CodingSession SelectCodingSession(List<CodingSession> sessions)
     {
-        return AnsiConsole.Prompt(
-            new SelectionPrompt<CodingSession>()
-                .AddChoices(sessions)
-                .UseConverter(session =>
-                    $"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}"));
+        if (sessions.Count != 1)
+            return AnsiConsole.Prompt(
+                new SelectionPrompt<CodingSession>()
+                    .AddChoices(sessions)
+                    .UseConverter(session =>
+                        $"{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}"));
+        
+        ShowMessage(UiMessage.OnlyOneSessionFound);
+        WaitForUser();
+        return sessions[0];
     }
 
-    public FilterPeriodOptions GetFilterPeriodOption()
+    private static TEnum PromptEnum<TEnum>() where TEnum : struct, Enum
     {
         return AnsiConsole.Prompt(
-            new SelectionPrompt<FilterPeriodOptions>()
+            new SelectionPrompt<TEnum>()
                 .UseConverter(option => option.GetDescription())
-                .AddChoices(Enum.GetValues<FilterPeriodOptions>())
+                .AddChoices(Enum.GetValues<TEnum>())
         );
+    }
+
+    public void WaitForUser()
+    {
+        AnsiConsole.WriteLine("\nPress any key to continue");
+        Console.ReadKey();
     }
 }

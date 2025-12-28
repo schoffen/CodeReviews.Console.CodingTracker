@@ -10,7 +10,5 @@ public enum MySessionsOptions
     FilterByPeriod,
     [Description("Sort Order")]
     SortOrder,
-    [Description("Select Session")]
-    SelectSession,
     Return
 }
