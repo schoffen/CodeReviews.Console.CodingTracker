@@ -14,7 +14,7 @@ public interface IUserInterface
     public void ShowSelectedSessionMenu(CodingSession codingSession);
     public void ShowElapsedTime(TimeSpan elapsed);
     
-    public void NotifyUser(NotificationType notificationType);
+    public void NotifyUser(NotificationType notificationType, bool waitForUser = false);
     public void NotifyUserException(CodingTrackerException exception);
     
     public DateTime GetDateTimeInput(DateType dateType);

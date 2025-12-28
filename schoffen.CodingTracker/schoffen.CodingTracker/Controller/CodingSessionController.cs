@@ -49,7 +49,7 @@ public class CodingSessionController(
     private void ExecuteStartNewSession()
     {
         Console.Clear();
-        ui.NotifyUser(NotificationType.StartingNewSession);
+        ui.NotifyUser(NotificationType.StartingNewSession, true);
 
         try
         {
@@ -64,10 +64,11 @@ public class CodingSessionController(
 
     private CodingSession TrackAndSaveSession()
     {
+        ui.NotifyUser(NotificationType.TrackingSession);
+        
         var tracker = new SessionTracker();
         tracker.Start();
 
-        ui.NotifyUser(NotificationType.TrackingSession);
         ui.NotifyUser(NotificationType.PressEnterToStop);
 
         while (!Console.KeyAvailable)

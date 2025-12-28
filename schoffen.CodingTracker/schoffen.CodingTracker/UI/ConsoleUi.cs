@@ -29,6 +29,7 @@ public class ConsoleUi : IUserInterface
     public void ShowCodingSession(CodingSession session)
     {
         AnsiConsole.WriteLine($"\n{session.StartTime} | {session.EndTime} | {session.GetFormattedDuration()}\n");
+        WaitForUser();
     }
 
     public bool TryShowSessionsTable(List<CodingSession> sessions)
@@ -61,11 +62,11 @@ public class ConsoleUi : IUserInterface
         AnsiConsole.Clear();
         AnsiConsole.Write(
             new Markup(
-                $"[bold cyan]Session {codingSession.StartTime} | {codingSession.EndTime} | {codingSession.GetFormattedDuration()}:[/]\n\n[cyan]Select an option:[/]\n")
+                $"[bold cyan]Session {codingSession.StartTime} | {codingSession.EndTime} | {codingSession.GetFormattedDuration()}[/]\n\n[cyan]Select an option:[/]\n")
         );
     }
 
-    public void NotifyUser(NotificationType notificationType)
+    public void NotifyUser(NotificationType notificationType, bool waitForUser = false)
     {
         var text = notificationType switch
         {
@@ -84,7 +85,9 @@ public class ConsoleUi : IUserInterface
         };
         
         AnsiConsole.MarkupLine(text);
-        WaitForUser();
+        
+        if (waitForUser)
+            WaitForUser();
     }
 
     public void NotifyUserException(CodingTrackerException exception)

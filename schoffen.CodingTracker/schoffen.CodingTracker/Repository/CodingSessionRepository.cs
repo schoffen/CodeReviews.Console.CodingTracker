@@ -1,6 +1,8 @@
 ﻿using Dapper;
+using Microsoft.Data.Sqlite;
 using schoffen.CodingTracker.Database;
 using schoffen.CodingTracker.Enums;
+using schoffen.CodingTracker.Exceptions;
 using schoffen.CodingTracker.Models;
 
 namespace schoffen.CodingTracker.Repository;
@@ -14,9 +16,11 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
                                  VALUES (@StartTime, @EndTime);
                                  """;
 
-        using var connection = dbContext.CreateConnection();
-
-        connection.Execute(insertSql, session);
+        ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            connection.Execute(insertSql, session);
+        });
     }
 
     public void UpdateCodingSession(CodingSession session)
@@ -27,36 +31,44 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
                                  WHERE Id = @Id;
                                  """;
 
-        using var connection = dbContext.CreateConnection();
-
-        connection.Execute(updateSql, session);
+        ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            connection.Execute(updateSql, session);
+        });
     }
 
     public void DeleteCodingSession(CodingSession session)
     {
         const string deleteSql = "DELETE FROM CodingSessions WHERE Id = @Id;";
 
-        using var connection = dbContext.CreateConnection();
-
-        connection.Execute(deleteSql, session);
+        ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            connection.Execute(deleteSql, session);
+        });
     }
 
     public List<CodingSession> GetAllCodingSessions()
     {
         const string getSql = "SELECT * FROM CodingSessions;";
 
-        using var connection = dbContext.CreateConnection();
-
-        return connection.Query<CodingSession>(getSql).ToList();
+        return ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            return connection.Query<CodingSession>(getSql).ToList();
+        });
     }
 
     public CodingSession? GetCodingSessionById(int id)
     {
         const string getSql = "SELECT * FROM CodingSessions WHERE Id = @Id;";
 
-        using var connection = dbContext.CreateConnection();
-
-        return connection.QuerySingleOrDefault<CodingSession>(getSql, new { Id = id });
+        return ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            return connection.QuerySingleOrDefault<CodingSession>(getSql, new { Id = id });
+        });
     }
 
     public List<CodingSession> GetAllCodingSessionsOrderedByStartTime(SortDirection sortDirection)
@@ -65,9 +77,11 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
 
         var getSql = $"SELECT * FROM CodingSessions ORDER BY StartTime {direction};";
 
-        using var connection = dbContext.CreateConnection();
-
-        return connection.Query<CodingSession>(getSql).ToList();
+        return ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            return connection.Query<CodingSession>(getSql).ToList();
+        });
     }
 
     public List<CodingSession> GetCodingSessionsByDate(DateTime date)
@@ -78,9 +92,11 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
         const string getSql =
             "SELECT * FROM CodingSessions WHERE StartTime  >= @Start AND StartTime < @End ORDER BY StartTime;";
 
-        using var connection = dbContext.CreateConnection();
-
-        return connection.Query<CodingSession>(getSql, new { Start = start, End = end }).ToList();
+        return ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            return connection.Query<CodingSession>(getSql, new { Start = start, End = end }).ToList();
+        });
     }
 
     public List<CodingSession> GetCodingSessionsByWeek(DateTime weekStartDate, DateTime weekEndDate)
@@ -88,9 +104,11 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
         const string getSql =
             "SELECT * FROM CodingSessions WHERE StartTime  >= @Start AND StartTime <= @End ORDER BY StartTime;";
 
-        using var connection = dbContext.CreateConnection();
-
-        return connection.Query<CodingSession>(getSql, new { Start = weekStartDate, End = weekEndDate }).ToList();
+        return ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            return connection.Query<CodingSession>(getSql, new { Start = weekStartDate, End = weekEndDate }).ToList();
+        });
     }
 
     public List<CodingSession> GetCodingSessionsByYear(int year)
@@ -101,8 +119,34 @@ public class CodingSessionRepository(DatabaseContext dbContext) : ICodingSession
         const string getSql =
             "SELECT * FROM CodingSessions WHERE StartTime  >= @Start AND StartTime <= @End ORDER BY StartTime;";
 
-        using var connection = dbContext.CreateConnection();
+        return ExecuteSafely(() =>
+        {
+            using var connection = dbContext.CreateConnection();
+            return connection.Query<CodingSession>(getSql, new { Start = start, End = end }).ToList();
+        });
+    }
 
-        return connection.Query<CodingSession>(getSql, new { Start = start, End = end }).ToList();
+    private static void ExecuteSafely(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (SqliteException)
+        {
+            throw new DatabaseCommunicationException();
+        }
+    }
+    
+    private static T ExecuteSafely<T>(Func<T> func)
+    {
+        try
+        {
+            return func();
+        }
+        catch (SqliteException)
+        {
+            throw new DatabaseCommunicationException();
+        }
     }
 }
